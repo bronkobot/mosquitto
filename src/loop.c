@@ -278,6 +278,7 @@ int mosquitto_main_loop(struct mosquitto__listener_sock *listensock, int listens
 void do_disconnect(struct mosquitto *context, int reason)
 {
 	const char *id;
+	const char *address;
 #ifdef WITH_WEBSOCKETS
 	bool is_duplicate = false;
 #endif
@@ -320,12 +321,18 @@ void do_disconnect(struct mosquitto *context, int reason)
 			}else{
 				id = "<unknown>";
 			}
+			if(context->address){
+				address = context->address;
+			}else{                                                                                                                                                                             
+				address = "<unknown>";
+			}
 			if(context->state != mosq_cs_disconnecting && context->state != mosq_cs_disconnect_with_will){
 				switch(reason){
 					case MOSQ_ERR_SUCCESS:
 						break;
 					case MOSQ_ERR_MALFORMED_PACKET:
 						log__printf(NULL, MOSQ_LOG_NOTICE, "Client %s disconnected due to malformed packet.", id);
+						log__printf(NULL, MOSQ_LOG_NOTICE, "fail2ban block ip: %s", address);
 						break;
 					case MOSQ_ERR_PROTOCOL:
 						log__printf(NULL, MOSQ_LOG_NOTICE, "Client %s disconnected due to protocol error.", id);
@@ -335,15 +342,18 @@ void do_disconnect(struct mosquitto *context, int reason)
 						break;
 					case MOSQ_ERR_AUTH:
 						log__printf(NULL, MOSQ_LOG_NOTICE, "Client %s disconnected, not authorised.", id);
+						log__printf(NULL, MOSQ_LOG_NOTICE, "fail2ban block ip: %s", address);
 						break;
 					case MOSQ_ERR_KEEPALIVE:
 						log__printf(NULL, MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", id);
 						break;
 					case MOSQ_ERR_OVERSIZE_PACKET:
 						log__printf(NULL, MOSQ_LOG_NOTICE, "Client %s disconnected due to oversize packet.", id);
+						log__printf(NULL, MOSQ_LOG_NOTICE, "fail2ban block ip: %s", address);
 						break;
 					case MOSQ_ERR_PAYLOAD_SIZE:
 						log__printf(NULL, MOSQ_LOG_NOTICE, "Client %s disconnected due to oversize payload.", id);
+						log__printf(NULL, MOSQ_LOG_NOTICE, "fail2ban block ip: %s", address);
 						break;
 					case MOSQ_ERR_NOMEM:
 						log__printf(NULL, MOSQ_LOG_NOTICE, "Client %s disconnected due to out of memory.", id);
